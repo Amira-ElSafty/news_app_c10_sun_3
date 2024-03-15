@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_news_c10_sun3/api/api_manager.dart';
+import 'package:flutter_app_news_c10_sun3/home/news/news_item.dart';
+import 'package:flutter_app_news_c10_sun3/model/NewsResponse.dart';
 import 'package:flutter_app_news_c10_sun3/model/SourceResponse.dart';
-import 'package:flutter_app_news_c10_sun3/model/category.dart';
 import 'package:flutter_app_news_c10_sun3/my_theme.dart';
-import 'package:flutter_app_news_c10_sun3/tab/tab_widget.dart';
 
-class CategoryDetails extends StatefulWidget {
-  static const String routeName = 'category-details';
-  CategoryDM category;
+class NewsWidget extends StatefulWidget {
+  Source source;
 
-  CategoryDetails({required this.category});
+  NewsWidget({required this.source});
 
   @override
-  State<CategoryDetails> createState() => _CategoryDetailsState();
+  State<NewsWidget> createState() => _NewsWidgetState();
 }
 
-class _CategoryDetailsState extends State<CategoryDetails> {
+class _NewsWidgetState extends State<NewsWidget> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<SourceResponse?>(
-        future: ApiManager.getSources(widget.category.id),
+    return FutureBuilder<NewsResponse?>(
+        future: ApiManager.getNewsBySourceId(widget.source.id ?? ""),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -33,7 +32,7 @@ class _CategoryDetailsState extends State<CategoryDetails> {
                 Text('Something went wrong'),
                 ElevatedButton(
                     onPressed: () {
-                      ApiManager.getSources(widget.category.id);
+                      ApiManager.getNewsBySourceId(widget.source.id ?? '');
                       setState(() {});
                     },
                     child: Text('Try Again'))
@@ -47,15 +46,20 @@ class _CategoryDetailsState extends State<CategoryDetails> {
                 Text(snapshot.data!.message!),
                 ElevatedButton(
                     onPressed: () {
-                      ApiManager.getSources(widget.category.id);
+                      ApiManager.getNewsBySourceId(widget.source.id ?? '');
                       setState(() {});
                     },
                     child: Text('Try Again'))
               ],
             );
           }
-          var sourcesList = snapshot.data?.sources ?? [];
-          return TabWidget(sourcesList: sourcesList);
+          var newsList = snapshot.data?.articles ?? [];
+          return ListView.builder(
+            itemBuilder: (context, index) {
+              return NewsItem(news: newsList[index]);
+            },
+            itemCount: newsList.length,
+          );
         });
   }
 }
